@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>My Page</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet"	href="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.css">
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script	src="http://code.jquery.com/mobile/1.3.1/jquery.mobile-1.3.1.min.js"></script>
+	<style type="text/css">
+		.tabbed {
+			min-width: 80px;
+			margin-right: 5px;
+			float: left;
+		}
+	</style>
+	
+</head>
+<body>
+	<div data-role="page">
+
+		<div data-role="header">
+			<h1>COWO Calculator</h1>
+		</div>
+		<!-- /header -->
+
+		<div data-role="content">
+			<h1>Checkin</h1>
+			<div data-role="fieldcontain">
+				<fieldset data-role="controlgroup" data-type="horizontal">
+					<label for="select-checkin-hour">Stunde</label>
+					<input type="range"	name="select-checkin-hour" id="select-checkin-hour"	class="js-update-model" value="09" min="9" max="18" />
+					<label for="select-checkin-min">Min</label>
+					<input type="range" name="select-checkin-min" id="select-checkin-min" class="js-update-model" value="0" min="0" max="100" />
+				</fieldset>
+			</div>
+
+			<h1>Checkout</h1>
+			<div data-role="fieldcontain">
+				<fieldset data-role="controlgroup" data-type="horizontal">
+					<label for="select-checkout-hour">Stunde</label>
+					<input type="range" name="select-checkout-hour" id="select-checkout-hour" class="js-update-model" value="18" min="9" max="18" />
+					<label for="select-checkout-min">Min</label>
+					<input type="range" name="select-checkout-min" id="select-checkout-min" class="js-update-model" value="100" min="0" max="100" />
+				</fieldset>
+			</div>
+
+			<h1>Time</h1>
+			<div>
+				<div class="tabbed">Insgesamt:</div>
+				<div class="tabbed" id="total-minutes"></div>
+				<div class="tabbed">Minuten</div>
+				<div style="clear: both;"></div>
+				<div class="tabbed">Zu zahlen: </div>
+				<div class="tabbed" id="total-cost"></div>
+				<div class="tabbed">Euro</div>
+				<div style="clear: both;"></div>
+			</div>
+
+		</div>
+		<!-- /content -->
+
+		<div data-role="footer">
+			<h4></h4>
+		</div>
+		<!-- /footer -->
+
+	</div>
+	<!-- /page -->
+
+	<script>
+Number.prototype.formatMoney = function(c, d, t) {
+	// thankyou stackoverflow 
+	// http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
+	var n = this, 
+	    c = isNaN(c = Math.abs(c)) ? 2 : c, 
+	    d = d == undefined ? "," : d, 
+	    t = t == undefined ? "." : t, 
+	    s = n < 0 ? "-" : "", 
+	    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "", 
+	    j = (j = i.length) > 3 ? j % 3 : 0;
+	    
+   return s + (j ? i.substr(0, j) + t : "") + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+};
+		 
+$(function() {
+	$(document).on('calcTime', function() {
+		var checkinHour, checkinMin,
+			checkoutHour, checkoutMin,
+			start, end,
+			delta,
+			cost;
+		
+		checkinHour = parseInt($('#select-checkin-hour').val());
+		checkinMin = parseInt($('#select-checkin-min').val());
+		checkoutHour = parseInt($('#select-checkout-hour').val());
+		checkoutMin = parseInt($('#select-checkout-min').val());
+		
+		start = (checkinHour * 60) + Math.round(checkinMin * 60/100);
+		end = (checkoutHour * 60) + Math.round(checkoutMin * 60/100);
+		
+		delta = end - start;
+		if (delta < 0) {
+			delta = 0;
+		}
+		
+		cost = delta * 0.05;
+		if (cost > 19) {
+			cost = 19;
+		}
+		
+		
+		$('#total-minutes').text(delta);
+		$('#total-cost').text(cost.formatMoney());
+	});
+	$('.js-update-model').on('change', function() {
+		$(document).trigger('calcTime');
+	});
+	
+	// set current time
+	var d = new Date();
+	$('#select-checkout-hour').val(d.getHours());
+	$('#select-checkout-min').val(Math.round(d.getMinutes() * 100/60));
+	$('#select-checkout-hour').slider("refresh");
+	$('#select-checkout-min').slider("refresh");
+	
+	// on pageload
+	$(document).trigger('calcTime');
+});
+</script>
+</body>
+</html>
